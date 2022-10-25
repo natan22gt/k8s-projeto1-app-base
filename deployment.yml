@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-dados
+spec:
+  resources:
+    requests:
+      storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-database
+spec:
+  selector:
+    matchLabels:
+      app: mysql-database
+  template:
+    metadata:
+      labels:
+        app: mysql-database
+    spec:
+      containers:
+      - name: mysql-database
+        image: natan4dev/projeto-database:1.0
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-dados
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-dados
+        persistentVolumeClaim:
+          claimName: mysql-dados
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-backend
+spec:
+  selector:
+    matchLabels:
+      app: php-backend
+  template:
+    metadata:
+      labels:
+        app: php-backend
+    spec:
+      containers:
+      - name: php-backend
+        image: natan4dev/projeto-backend:1.0
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
